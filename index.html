@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Agenda Kerja Modern</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-calendar-check text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 leading-tight">Agenda Kerja</h1>
+                    <p class="text-xs text-slate-500" id="current-date-header">Memuat tanggal...</p>
+                </div>
+            </div>
+            <button onclick="bukaModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm transition flex items-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-plus"></i>
+                <span>Agenda Baru</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="max-w-4xl w-full mx-auto px-4 py-6 flex-grow">
+        
+        <!-- Statistik Ringkas -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-3">
+                <div class="bg-blue-50 text-blue-600 p-3 rounded-xl"><i class="fa-solid fa-list-check"></i></div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Total Agenda</p>
+                    <h3 class="text-lg font-bold text-slate-800" id="stat-total">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-3">
+                <div class="bg-amber-50 text-amber-600 p-3 rounded-xl"><i class="fa-solid fa-clock"></i></div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Belum Selesai</p>
+                    <h3 class="text-lg font-bold text-slate-800" id="stat-pending">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-3 col-span-2 sm:col-span-1">
+                <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl"><i class="fa-solid fa-circle-check"></i></div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Selesai</p>
+                    <h3 class="text-lg font-bold text-slate-800" id="stat-completed">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Pencarian -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
+            <div class="relative w-full sm:w-72">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="search-input" oninput="renderAgenda()" placeholder="Cari agenda kerja..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                <button onclick="ubahFilter('semua')" id="btn-filter-semua" class="filter-btn px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white transition cursor-pointer">Semua</button>
+                <button onclick="ubahFilter('pending')" id="btn-filter-pending" class="filter-btn px-3.5 py-2 text-xs font-semibold rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition cursor-pointer">Belum</button>
+                <button onclick="ubahFilter('selesai')" id="btn-filter-selesai" class="filter-btn px-3.5 py-2 text-xs font-semibold rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition cursor-pointer">Selesai</button>
+            </div>
+        </div>
+
+        <!-- Daftar Agenda -->
+        <div id="agenda-list" class="space-y-3">
+            <!-- Data Agenda akan dimuat lewat JavaScript -->
+        </div>
+
+        <!-- State Kosong -->
+        <div id="empty-state" class="hidden text-center py-12">
+            <div class="text-slate-300 text-5xl mb-3">
+                <i class="fa-regular fa-folder-open"></i>
+            </div>
+            <p class="text-slate-500 text-sm font-medium">Belum ada agenda kerja yang tersimpan.</p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-100 mt-auto">
+        Aplikasi Agenda Kerja &copy; 2026 • Dibuat dengan Tailwind CSS
+    </footer>
+
+    <!-- Modal Tambah/Edit Agenda -->
+    <div id="agenda-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-base font-bold text-slate-900">Tambah Agenda Baru</h3>
+                <button onclick="tutupModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="agenda-form" onsubmit="simpanAgenda(event)">
+                <input type="hidden" id="agenda-id">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Judul Agenda</label>
+                        <input type="text" id="agenda-judul" required placeholder="Contoh: Ruting Mingguan Divisi IT" 
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal</label>
+                            <input type="date" id="agenda-tanggal" required 
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu</label>
+                            <input type="time" id="agenda-waktu" required 
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori / Prioritas</label>
+                        <select id="agenda-prioritas" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Rendah">Rendah (Santai)</option>
+                            <option value="Sedang" selected>Sedang (Normal)</option>
+                            <option value="Penting">Penting (Mendesak)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan / Deskripsi (Opsional)</label>
+                        <textarea id="agenda-deskripsi" rows="3" placeholder="Detail tugas atau bahan rapat..." 
+                            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" onclick="tutupModal()" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition cursor-pointer">Batal</button>
+                    <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition cursor-pointer">Simpan Agenda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Aplikasi -->
+    <script>
+        // Set tanggal di header
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date-header').innerText = new Date().toLocaleDateString('id-ID', options);
+
+        let agendaData = JSON.parse(localStorage.getItem('agenda_kerja')) || [];
+        let filterAktif = 'semua';
+
+        function formatTanggal(tanggalStr) {
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return new Date(tanggalStr).toLocaleDateString('id-ID', options);
+        }
+
+        function bukaModal(id = null) {
+            document.getElementById('agenda-modal').classList.remove('hidden');
+            if (id) {
+                document.getElementById('modal-title').innerText = 'Edit Agenda Kerja';
+                const agenda = agendaData.find(item => item.id === id);
+                if (agenda) {
+                    document.getElementById('agenda-id').value = agenda.id;
+                    document.getElementById('agenda-judul').value = agenda.judul;
+                    document.getElementById('agenda-tanggal').value = agenda.tanggal;
+                    document.getElementById('agenda-waktu').value = agenda.waktu;
+                    document.getElementById('agenda-prioritas').value = agenda.prioritas;
+                    document.getElementById('agenda-deskripsi').value = agenda.deskripsi;
+                }
+            } else {
+                document.getElementById('modal-title').innerText = 'Tambah Agenda Baru';
+                document.getElementById('agenda-form').reset();
+                document.getElementById('agenda-id').value = '';
+                // Set default tanggal hari ini
+                document.getElementById('agenda-tanggal').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function tutupModal() {
+            document.getElementById('agenda-modal').classList.add('hidden');
+        }
+
+        function simpanAgenda(e) {
+            e.preventDefault();
+            const id = document.getElementById('agenda-id').value;
+            const judul = document.getElementById('agenda-judul').value;
+            const tanggal = document.getElementById('agenda-tanggal').value;
+            const waktu = document.getElementById('agenda-waktu').value;
+            const prioritas = document.getElementById('agenda-prioritas').value;
+            const deskripsi = document.getElementById('agenda-deskripsi').value;
+
+            if (id) {
+                // Update
+                agendaData = agendaData.map(item => item.id == id ? { ...item, judul, tanggal, waktu, prioritas, deskripsi } : item);
+            } else {
+                // Tambah baru
+                const newItem = {
+                    id: Date.now(),
+                    judul,
+                    tanggal,
+                    waktu,
+                    prioritas,
+                    deskripsi,
+                    selesai: false
+                };
+                agendaData.push(newItem);
+            }
+
+            simpanDanRender();
+            tutupModal();
+        }
+
+        function hapusAgenda(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus agenda ini?')) {
+                agendaData = agendaData.filter(item => item.id !== id);
+                simpanDanRender();
+            }
+        }
+
+        function toggleSelesai(id) {
+            agendaData = agendaData.map(item => item.id === id ? { ...item, selesai: !item.selesai } : item);
+            simpanDanRender();
+        }
+
+        function ubahFilter(filter) {
+            filterAktif = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn px-3.5 py-2 text-xs font-semibold rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition cursor-pointer";
+            });
+            const aktifBtn = document.getElementById(`btn-filter-${filter}`);
+            aktifBtn.className = "filter-btn px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white transition cursor-pointer";
+            renderAgenda();
+        }
+
+        function simpanDanRender() {
+            localStorage.setItem('agenda_kerja', JSON.stringify(agendaData));
+            renderAgenda();
+        }
+
+        function renderAgenda() {
+            const listEl = document.getElementById('agenda-list');
+            const emptyEl = document.getElementById('empty-state');
+            const keyword = document.getElementById('search-input').value.toLowerCase();
+
+            // Filter data
+            let filtered = agendaData.filter(item => {
+                const matchKeyword = item.judul.toLowerCase().includes(keyword) || (item.deskripsi && item.deskripsi.toLowerCase().includes(keyword));
+                if (filterAktif === 'pending') return matchKeyword && !item.selesai;
+                if (filterAktif === 'selesai') return matchKeyword && item.selesai;
+                return matchKeyword;
+            });
+
+            // Urutkan berdasarkan tanggal & waktu terdekat
+            filtered.sort((a, b) => new Date(`${a.tanggal}T${a.waktu}`) - new Date(`${b.tanggal}T${b.waktu}`));
+
+            // Update Statistik
+            document.getElementById('stat-total').innerText = agendaData.length;
+            document.getElementById('stat-pending').innerText = agendaData.filter(i => !i.selesai).length;
+            document.getElementById('stat-completed').innerText = agendaData.filter(i => i.selesai).length;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = filtered.map(item => {
+                let badgeColor = 'bg-slate-100 text-slate-600';
+                if (item.prioritas === 'Sedang') badgeColor = 'bg-blue-50 text-blue-600';
+                if (item.prioritas === 'Penting') badgeColor = 'bg-rose-50 text-rose-600';
+
+                return `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start justify-between gap-3 transition hover:shadow-md ${item.selesai ? 'opacity-60 bg-slate-50/50' : ''}">
+                        <div class="flex items-start space-x-3.5 flex-grow">
+                            <input type="checkbox" ${item.selesai ? 'checked' : ''} onclick="toggleSelesai(${item.id})" 
+                                class="mt-1 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer">
+                            <div class="space-y-1">
+                                <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                                    <h4 class="text-sm font-semibold text-slate-800 ${item.selesai ? 'line-through text-slate-400' : ''}">${escapeHtml(item.judul)}</h4>
+                                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md ${badgeColor}">${item.prioritas}</span>
+                                </div>
+                                <div class="flex items-center space-x-3 text-xs text-slate-500">
+                                    <span><i class="fa-regular fa-calendar mr-1"></i> ${formatTanggal(item.tanggal)}</span>
+                                    <span><i class="fa-regular fa-clock mr-1"></i> ${item.waktu} WIB</span>
+                                </div>
+                                ${item.deskripsi ? `<p class="text-xs text-slate-600 mt-1.5 bg-slate-50 p-2 rounded-xl">${escapeHtml(item.deskripsi)}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="bukaModal(${item.id})" class="p-2 text-slate-400 hover:text-indigo-600 transition cursor-pointer" title="Edit">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="hapusAgenda(${item.id})" class="p-2 text-slate-400 hover:text-rose-600 transition cursor-pointer" title="Hapus">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Render awal saat halaman dibuka
+        renderAgenda();
+    </script>
+</body>
+</html>
