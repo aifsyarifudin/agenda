@@ -1,7 +1,8 @@
-const CACHE_NAME = 'agenda-kerja-v1';
+const CACHE_NAME = 'agenda-kerja-v2';
 const assetsToCache = [
-  './index.html',
-  './manifest.json'
+  '/agenda/',
+  '/agenda/index.html',
+  '/agenda/manifest.json'
 ];
 
 // Install Service Worker
@@ -14,7 +15,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Activate Service Worker
+// Activate Service Worker & Bersihkan Cache Lama
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
