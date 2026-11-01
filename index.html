@@ -321,9 +321,7 @@
 
         // Render awal saat halaman dibuka
         renderAgenda();
-    </script>
-    <!-- Skrip Pendaftaran Service Worker -->
-    <script>
+   
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
